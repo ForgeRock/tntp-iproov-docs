@@ -180,6 +180,8 @@ public class onfidoRegistrationNode implements Node {
 
             return Action.goTo("true").build();
         } catch(Exception ex) {
+            ex.printStackTrace();
+            context.sharedState.put("Exception", ex.toString());
             return Action.goTo("error").build();
         }
     }
