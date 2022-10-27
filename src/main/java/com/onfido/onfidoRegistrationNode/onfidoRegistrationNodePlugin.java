@@ -60,7 +60,7 @@ import java.util.Map;
  */
 public class onfidoRegistrationNodePlugin extends AbstractNodeAmPlugin {
 
-    static private String currentVersion = "2.0.0";
+    static private String currentVersion = "2.0.9";
 
     /**
      * Specify the Map of list of node classes that the plugin is providing. These will then be installed and
@@ -108,6 +108,8 @@ public class onfidoRegistrationNodePlugin extends AbstractNodeAmPlugin {
      */
     @Override
     public void upgrade(String fromVersion) throws PluginException {
+        pluginTools.upgradeAuthNode(onfidoRegistrationNode.class);
+        pluginTools.upgradeAuthNode(onfidoWebhookNode.class);
         super.upgrade(fromVersion);
     }
 

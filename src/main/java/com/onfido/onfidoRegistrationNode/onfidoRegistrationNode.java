@@ -37,7 +37,7 @@ import org.forgerock.openam.core.CoreWrapper;
 import org.forgerock.openam.sm.annotations.adapters.Password;
 import org.json.JSONException;
 import org.json.JSONObject;
-
+import org.forgerock.openam.auth.node.api.OutcomeProvider;
 import javax.inject.Inject;
 import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.TextOutputCallback;
@@ -45,24 +45,27 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import org.forgerock.util.i18n.PreferredLocales;
 import static org.forgerock.json.JsonValue.json;
 import static org.forgerock.json.JsonValue.object;
 import static org.forgerock.openam.auth.node.api.Action.send;
-
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.ResourceBundle;
 /**
  * The onfidoRegistrationNode is used in an authentication tree to require an end user to go through an identity
  * verification (IDV) check using document, face, or video. This check is run by onfido. Information is pulled
  * from the document to initiate the IDV check.
  */
 @Slf4j(topic = "amAuth")
-@Node.Metadata(outcomeProvider = SingleOutcomeNode.OutcomeProvider.class,
-        configClass = onfidoRegistrationNode.Config.class)
-public class onfidoRegistrationNode extends SingleOutcomeNode {
+@Node.Metadata(outcomeProvider = onfidoRegistrationNode.OutcomeProvider.class,
+        configClass = onfidoRegistrationNode.Config.class, tags = {"marketplace","trustnetwork"})
+public class onfidoRegistrationNode implements Node {
 
     private final Config config;
     private final CoreWrapper coreWrapper;
     private final OnfidoAPI onfidoApi;
+    private String loggerPrefix = "[Onfido Registration Node][Partner] ";
 
     /**
      * Configuration for the node.
@@ -143,7 +146,7 @@ public class onfidoRegistrationNode extends SingleOutcomeNode {
      */
     @Inject
     public onfidoRegistrationNode(@Assisted Config config, CoreWrapper coreWrapper) throws NodeProcessException {
-        log.debug("onfidoRegistrationNode config: {}", config);
+        log.debug(loggerPrefix+"onfidoRegistrationNode config: {}", config);
         this.config = config;
         this.coreWrapper = coreWrapper;
         this.onfidoApi = new OnfidoAPI(config);
@@ -151,30 +154,36 @@ public class onfidoRegistrationNode extends SingleOutcomeNode {
 
     @Override
     public Action process(TreeContext context) throws NodeProcessException {
-        log.debug("Calling onfidoRegistrationNode process method. Context: {}", context);
 
-        if (!context.getCallback(TextOutputCallback.class).isPresent()) {
-            return buildCallbacks(context);
+        log.debug(loggerPrefix+"Calling onfidoRegistrationNode process method. Context: {}", context);
+        try {
+            if (!context.getCallback(TextOutputCallback.class).isPresent()) {
+                return buildCallbacks(context);
+            }
+
+            onfidoAutoFill autofill = new onfidoAutoFill(onfidoApi);
+
+            // Registration Flow (New User)
+            if (config.JITProvisioning()) {
+                handleJITProvisioning(context, autofill);
+            }
+
+            // Step-Up Flow (Existing User)
+            if (!context.request.ssoTokenId.isEmpty()) {
+                useSSOToken(context, autofill);
+            }
+
+            String applicantId = context.sharedState.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
+            context.sharedState.remove(onfidoConstants.ONFIDO_APPLICANT_ID);
+
+            onfidoApi.createCheck(applicantId);
+
+            return Action.goTo("true").build();
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            context.sharedState.put("Exception", ex.toString());
+            return Action.goTo("error").build();
         }
-
-        onfidoAutoFill autofill = new onfidoAutoFill(onfidoApi);
-
-        // Registration Flow (New User)
-        if (config.JITProvisioning()) {
-            handleJITProvisioning(context, autofill);
-        }
-
-        // Step-Up Flow (Existing User)
-        if (!context.request.ssoTokenId.isEmpty()) {
-            useSSOToken(context, autofill);
-        }
-
-        String applicantId = context.sharedState.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
-        context.sharedState.remove(onfidoConstants.ONFIDO_APPLICANT_ID);
-
-        onfidoApi.createCheck(applicantId);
-
-        return goToNext().build();
     }
 
     private Action buildCallbacks(TreeContext context) throws NodeProcessException {
@@ -184,7 +193,7 @@ public class onfidoRegistrationNode extends SingleOutcomeNode {
 
         context.sharedState.put(onfidoConstants.ONFIDO_APPLICANT_ID, newApplicant.getId());
 
-        log.debug("SDK Token is {}", sdkToken);
+        log.debug(loggerPrefix+"SDK Token is {}", sdkToken);
 
         OnfidoWebSdkConfig webSdkConfig = new OnfidoWebSdkConfig(config, sdkToken);
 
@@ -221,7 +230,7 @@ public class onfidoRegistrationNode extends SingleOutcomeNode {
             userIdentity.setAttributes(attrMap);
             userIdentity.store();
         } catch (SSOException | IdRepoException e) {
-            String message = "Unable to store attribute for user. Make sure the configuration for called Onfido ApplicantID Attribute is a valid LDAP Attribute";
+            String message = loggerPrefix+"Unable to store attribute for user. Make sure the configuration for called Onfido ApplicantID Attribute is a valid LDAP Attribute";
             log.error(message, e);
         }
     }
@@ -272,7 +281,7 @@ public class onfidoRegistrationNode extends SingleOutcomeNode {
         try {
             return coreWrapper.getIdentity(SSOTokenManager.getInstance().createSSOToken(context.request.ssoTokenId));
         } catch (IdRepoException | SSOException e) {
-            log.error("Unable to find user identity for user with SSO token: {}", context.request.ssoTokenId);
+            log.error(loggerPrefix+"Unable to find user identity for user with SSO token: {}", context.request.ssoTokenId);
 
             throw new NodeProcessException(e);
         }
@@ -283,4 +292,29 @@ public class onfidoRegistrationNode extends SingleOutcomeNode {
         Selfie,
         Live
     }
+
+    public static final class OutcomeProvider implements org.forgerock.openam.auth.node.api.OutcomeProvider {
+            /**
+             * Outcomes Ids for this node.
+             */
+            static final String SUCCESS_OUTCOME = "true";
+            static final String ERROR_OUTCOME = "error";
+            private static final String BUNDLE = onfidoRegistrationNode.class.getName();
+
+            @Override
+            public List<Outcome> getOutcomes(PreferredLocales locales, JsonValue nodeAttributes) {
+
+                ResourceBundle bundle = locales.getBundleInPreferredLocale(BUNDLE, OutcomeProvider.class.getClassLoader());
+
+                List<Outcome> results = new ArrayList<>(
+                        Arrays.asList(
+                                new Outcome(SUCCESS_OUTCOME, "True")
+                        )
+                );
+                results.add(new Outcome(ERROR_OUTCOME, "Error"));
+
+                return Collections.unmodifiableList(results);
+            }
+    }
+
 }

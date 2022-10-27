@@ -24,6 +24,7 @@ import com.iplanet.sso.SSOTokenManager;
 import com.onfido.exceptions.OnfidoException;
 import com.onfido.models.Report;
 import com.onfido.webhooks.WebhookEvent;
+import org.forgerock.json.JsonValue;
 import com.onfido.webhooks.WebhookEventVerifier;
 import com.sun.identity.idm.AMIdentity;
 import com.sun.identity.idm.IdRepoException;
@@ -44,7 +45,11 @@ import org.forgerock.openam.auth.node.api.SingleOutcomeNode;
 import org.forgerock.openam.auth.node.api.TreeContext;
 import org.forgerock.openam.sm.annotations.adapters.Password;
 import org.forgerock.openam.utils.StringUtils;
-
+import org.forgerock.openam.auth.node.api.Node;
+import org.forgerock.openam.auth.node.api.NodeProcessException;
+import org.forgerock.openam.auth.node.api.OutcomeProvider;
+import org.forgerock.openam.auth.node.api.TreeContext;
+import org.forgerock.util.i18n.PreferredLocales;
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Collection;
@@ -54,18 +59,22 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-
+import java.util.ResourceBundle;
+import com.google.common.collect.ImmutableList;
 import static com.onfido.onfidoRegistrationNode.onfidoConstants.FAIL_FLAG;
 import static com.onfido.onfidoRegistrationNode.onfidoConstants.PASS_FLAG;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 
 @Slf4j(topic = "amAuth")
-@Node.Metadata(outcomeProvider = SingleOutcomeNode.OutcomeProvider.class, configClass = onfidoWebhookNode.Config.class)
-public class onfidoWebhookNode extends SingleOutcomeNode {
-
+@Node.Metadata(outcomeProvider = onfidoWebhookNode.OutcomeProvider.class, configClass = onfidoWebhookNode.Config.class, tags = {"marketplace","trustnetwork"})
+public class onfidoWebhookNode implements Node {
     private final Config config;
     private final CTSPersistentStore ctsPersistentStore;
     private final OnfidoAPI onfidoApi;
     private final onfidoHelper onfidoHelper;
+    private String loggerPrefix = "[Onfido Webhook Node][Partner] ";
 
 
     /**
@@ -124,7 +133,7 @@ public class onfidoWebhookNode extends SingleOutcomeNode {
      */
     @Inject
     public onfidoWebhookNode(@Assisted Config config, CTSPersistentStore ctsPersistentStore) throws NodeProcessException {
-        log.debug("onfidoWebhookNode config: {}", config);
+        log.debug(loggerPrefix+"onfidoWebhookNode config: {}", config);
 
         this.config = config;
         this.ctsPersistentStore = ctsPersistentStore;
@@ -134,30 +143,35 @@ public class onfidoWebhookNode extends SingleOutcomeNode {
 
     @Override
     public Action process(TreeContext context) throws NodeProcessException {
-        final HttpServletRequest request = context.request.servletRequest;
+        log.debug(loggerPrefix+"inside onfidoWebhookNode process");
+        try {
+            final HttpServletRequest request = context.request.servletRequest;
 
-        log.debug("inside onfidoWebhookNode process");
+            context.sharedState.put(SharedStateConstants.USERNAME, "anonymous");
 
-        context.sharedState.put(SharedStateConstants.USERNAME, "anonymous");
+            WebhookEvent webhookEvent = verifyWebhookEvent(request);
+            String checksHref = webhookEvent.getObject().getHref();
+            String checkId = webhookEvent.getObject().getId();
 
-        WebhookEvent webhookEvent = verifyWebhookEvent(request);
-        String checksHref = webhookEvent.getObject().getHref();
-        String checkId = webhookEvent.getObject().getId();
+            AMIdentity userIdentity =
+                    Optional.ofNullable(
+                            findUser(
+                                    context.sharedState.get(SharedStateConstants.REALM).asString(),
+                                    onfidoHelper.getApplicantId(checksHref)
+                            ))
+                            .orElseThrow(() -> new NodeProcessException("Could not find user identity"));
 
-        AMIdentity userIdentity =
-                Optional.ofNullable(
-                        findUser(
-                                context.sharedState.get(SharedStateConstants.REALM).asString(),
-                                onfidoHelper.getApplicantId(checksHref)
-                        ))
-                        .orElseThrow(() -> new NodeProcessException("Could not find user identity"));
+            log.debug(loggerPrefix+"Processing user: {}", userIdentity.getUniversalId());
+            log.debug(loggerPrefix+"Fetching results for check: {}", checkId);
 
-        log.debug("Processing user: {}", userIdentity.getUniversalId());
-        log.debug("Fetching results for check: {}", checkId);
+            setUserCheckResults(userIdentity, checkId);
 
-        setUserCheckResults(userIdentity, checkId);
-
-        return goToNext().build();
+            return Action.goTo("true").build();
+        } catch(Exception ex) {
+            ex.printStackTrace();
+            context.sharedState.put("Exception", ex.toString());
+            return Action.goTo("error").build();
+        }
     }
 
     private AMIdentity findUser(String realm, String applicantId) {
@@ -202,7 +216,7 @@ public class onfidoWebhookNode extends SingleOutcomeNode {
             userIdentity.setAttributes(attrMap);
             userIdentity.store();
 
-            log.debug("User was flagged");
+            log.debug(loggerPrefix+"User was flagged");
         } catch (IdRepoException | SSOException e) {
             throw new NodeProcessException(e);
         }
@@ -237,7 +251,7 @@ public class onfidoWebhookNode extends SingleOutcomeNode {
             throw new NodeProcessException(e);
         }
 
-        log.debug("Lock User");
+        log.debug(loggerPrefix+"Lock User");
     }
 
     private WebhookEvent verifyWebhookEvent(HttpServletRequest request) throws NodeProcessException {
@@ -253,4 +267,29 @@ public class onfidoWebhookNode extends SingleOutcomeNode {
             throw new NodeProcessException(e);
         }
     }
+
+    public static final class OutcomeProvider implements org.forgerock.openam.auth.node.api.OutcomeProvider {
+        /**
+         * Outcomes Ids for this node.
+         */
+        static final String SUCCESS_OUTCOME = "true";
+        static final String ERROR_OUTCOME = "error";
+        private static final String BUNDLE = onfidoWebhookNode.class.getName();
+
+        @Override
+        public List<Outcome> getOutcomes(PreferredLocales locales, JsonValue nodeAttributes) {
+
+            ResourceBundle bundle = locales.getBundleInPreferredLocale(BUNDLE, OutcomeProvider.class.getClassLoader());
+
+            List<Outcome> results = new ArrayList<>(
+                    Arrays.asList(
+                            new Outcome(SUCCESS_OUTCOME, "True")
+                    )
+            );
+            results.add(new Outcome(ERROR_OUTCOME, "Error"));
+
+            return Collections.unmodifiableList(results);
+        }
+    }
+
 }
