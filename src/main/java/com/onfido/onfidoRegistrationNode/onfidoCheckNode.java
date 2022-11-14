@@ -139,7 +139,9 @@ public class onfidoCheckNode implements Node {
         	if (status == "consider") {
                 return Action.goTo("consider").build();
             }
-
+            if (status == "pending") {
+                return Action.goTo("pending").build();
+            }
 
             return Action.goTo("deny").build();
         } catch(Exception ex) {
@@ -166,6 +168,7 @@ public class onfidoCheckNode implements Node {
             static final String CLEAR_OUTCOME = "clear";
             static final String CONSIDER_OUTCOME = "consider";
             static final String DENY_OUTCOME = "deny";
+            static final String PENDING_OUTCOME = "pending";
             static final String ERROR_OUTCOME = "error";
             
             private static final String BUNDLE = onfidoCheckNode.class.getName();
@@ -183,6 +186,7 @@ public class onfidoCheckNode implements Node {
                 results.add(new Outcome(CLEAR_OUTCOME, "Clear"));
                 results.add(new Outcome(CONSIDER_OUTCOME, "Consider"));
                 results.add(new Outcome(DENY_OUTCOME, "Deny"));
+                results.add(new Outcome(PENDING_OUTCOME, "Pending"));
                 results.add(new Outcome(ERROR_OUTCOME, "Error"));
 
                 return Collections.unmodifiableList(results);
