@@ -168,6 +168,7 @@ public class onfidoWebhookNode implements Node {
 
             return Action.goTo("true").build();
         } catch(Exception ex) {
+            log.error(loggerPrefix+"Exception occurred");
             ex.printStackTrace();
             context.sharedState.put("Exception", ex.toString());
             return Action.goTo("error").build();

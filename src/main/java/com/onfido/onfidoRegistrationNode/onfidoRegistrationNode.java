@@ -21,6 +21,7 @@ import com.google.inject.assistedinject.Assisted;
 import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOTokenManager;
 import com.onfido.models.Applicant;
+import com.onfido.models.Check;
 import com.sun.identity.authentication.callbacks.ScriptTextOutputCallback;
 import com.sun.identity.idm.AMIdentity;
 import com.sun.identity.idm.IdRepoException;
@@ -43,6 +44,7 @@ import javax.security.auth.callback.Callback;
 import javax.security.auth.callback.TextOutputCallback;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import org.forgerock.util.i18n.PreferredLocales;
@@ -52,6 +54,11 @@ import static org.forgerock.openam.auth.node.api.Action.send;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.ResourceBundle;
+import java.util.Set;
+
+import static org.forgerock.openam.auth.node.api.SharedStateConstants.REALM;
+import static org.forgerock.openam.auth.node.api.SharedStateConstants.USERNAME;
+
 /**
  * The onfidoRegistrationNode is used in an authentication tree to require an end user to go through an identity
  * verification (IDV) check using document, face, or video. This check is run by onfido. Information is pulled
@@ -100,6 +107,7 @@ public class onfidoRegistrationNode implements Node {
         default String onfidoApplicantIdAttribute() {
             return "title";
         }
+        
 
         @Attribute(order = 500)
         default Map<String, String> attributeMappingConfiguration() {
@@ -134,6 +142,12 @@ public class onfidoRegistrationNode implements Node {
         @Attribute(order = 1000)
         default String onfidoCSSUrl() {
             return "https://assets.onfido.com/web-sdk-releases/6.7.1/style.css";
+        }
+        
+
+        @Attribute(order = 1100)
+        default String onfidoCheckIdAttribute() {
+            return "description";
         }
     }
 
@@ -174,12 +188,32 @@ public class onfidoRegistrationNode implements Node {
             }
 
             String applicantId = context.sharedState.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
+
+            AMIdentity userIdentity = coreWrapper.getIdentity(context.sharedState.get(USERNAME).asString(), context.sharedState.get(REALM).asString());
+            Set<String> values = new HashSet<String>();
+            values.add(applicantId);
+            Map<String, Set> map = new HashMap<String, Set>();
+            map.put(config.onfidoApplicantIdAttribute(), values);
+            
+
+            userIdentity.setAttributes(map);
+            userIdentity.store();
+
             context.sharedState.remove(onfidoConstants.ONFIDO_APPLICANT_ID);
 
-            onfidoApi.createCheck(applicantId);
+            Check check = onfidoApi.createCheck(applicantId);
+            
+            Map<String, Set> map2 = new HashMap<String, Set>();
+            Set<String> values2 = new HashSet<String>();
+            values2.add(check.getId());
+            map2.put(config.onfidoCheckIdAttribute(), values2);
+            userIdentity.setAttributes(map2);
+            userIdentity.store();
 
             return Action.goTo("true").build();
         } catch(Exception ex) {
+            log.error(loggerPrefix+"Exception occurred");
+            log.error(ex.toString());
             ex.printStackTrace();
             context.sharedState.put("Exception", ex.toString());
             return Action.goTo("error").build();
