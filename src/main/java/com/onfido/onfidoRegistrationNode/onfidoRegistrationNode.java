@@ -72,7 +72,7 @@ public class onfidoRegistrationNode implements Node {
     private final Config config;
     private final CoreWrapper coreWrapper;
     private final OnfidoAPI onfidoApi;
-    private String loggerPrefix = "[Onfido Registration Node][Partner] ";
+    private String loggerPrefix = "[Onfido Registration Node][Marketplace] ";
 
     /**
      * Configuration for the node.

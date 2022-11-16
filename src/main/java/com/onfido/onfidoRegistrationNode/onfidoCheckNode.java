@@ -69,7 +69,7 @@ public class onfidoCheckNode implements Node {
     private final Config config;
     private final CoreWrapper coreWrapper;
     private final OnfidoAPICheck onfidoApi;
-    private String loggerPrefix = "[Onfido Registration Node][Partner] ";
+    private String loggerPrefix = "[Onfido Registration Node][Marketplace] ";
 
     /**
      * Configuration for the node.

@@ -74,7 +74,7 @@ public class onfidoWebhookNode implements Node {
     private final CTSPersistentStore ctsPersistentStore;
     private final OnfidoAPI onfidoApi;
     private final onfidoHelper onfidoHelper;
-    private String loggerPrefix = "[Onfido Webhook Node][Partner] ";
+    private String loggerPrefix = "[Onfido Webhook Node][Marketplace] ";
 
 
     /**
