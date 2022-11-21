@@ -72,7 +72,7 @@ public class onfidoRegistrationNode implements Node {
     private final Config config;
     private final CoreWrapper coreWrapper;
     private final OnfidoAPI onfidoApi;
-    private String loggerPrefix = "[Onfido Registration Node][Partner] ";
+    private String loggerPrefix = "[Onfido Registration Node][Marketplace] ";
 
     /**
      * Configuration for the node.
@@ -189,26 +189,28 @@ public class onfidoRegistrationNode implements Node {
 
             String applicantId = context.sharedState.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
 
-            AMIdentity userIdentity = coreWrapper.getIdentity(context.sharedState.get(USERNAME).asString(), context.sharedState.get(REALM).asString());
-            Set<String> values = new HashSet<String>();
-            values.add(applicantId);
-            Map<String, Set> map = new HashMap<String, Set>();
-            map.put(config.onfidoApplicantIdAttribute(), values);
-            
-
-            userIdentity.setAttributes(map);
-            userIdentity.store();
 
             context.sharedState.remove(onfidoConstants.ONFIDO_APPLICANT_ID);
 
             Check check = onfidoApi.createCheck(applicantId);
-            
-            Map<String, Set> map2 = new HashMap<String, Set>();
-            Set<String> values2 = new HashSet<String>();
-            values2.add(check.getId());
-            map2.put(config.onfidoCheckIdAttribute(), values2);
-            userIdentity.setAttributes(map2);
-            userIdentity.store();
+
+            if (!config.JITProvisioning()) {
+                AMIdentity userIdentity = coreWrapper.getIdentity(context.sharedState.get(USERNAME).asString(), context.sharedState.get(REALM).asString());
+                Set<String> values = new HashSet<String>();
+                values.add(applicantId);
+                Map<String, Set> map = new HashMap<String, Set>();
+                map.put(config.onfidoApplicantIdAttribute(), values);
+                userIdentity.setAttributes(map);
+                userIdentity.store();
+                Map<String, Set> map2 = new HashMap<String, Set>();
+                Set<String> values2 = new HashSet<String>();
+                values2.add(check.getId());
+                map2.put(config.onfidoCheckIdAttribute(), values2);
+                userIdentity.setAttributes(map2);
+                userIdentity.store();
+            } else {
+                context.sharedState.put("checkId", check.getId());
+            }
 
             return Action.goTo("true").build();
         } catch(Exception ex) {

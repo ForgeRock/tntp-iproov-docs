@@ -50,32 +50,25 @@ public class OnfidoAPICheck {
                             .build();
     }
 
-    public String checkStatus(String applicantId) throws NodeProcessException {
+    public String checkStatus(String checkId) throws NodeProcessException {
     	
-        log.debug("Creating check for applicant: {}", applicantId);
+        log.debug("Getting check for checkId: {}", checkId);
 
         log.debug("START: {}", new Timestamp(System.currentTimeMillis()));
-        log.error(applicantId);
 
-        // Create check configuration
-        Check.Request checkRequest = Check.request()
-                                          .applicantId(applicantId)
-                                          .reportNames(getReportTypes())
-                                          .asynchronous(true);
-
-        log.debug("Submitting check request: {}", checkRequest);
-       
-
-        // Create check
+        // Get check
         try {
-        	log.error(applicantId);
-            Check check = onfido.check.find(applicantId);
+            Check check = onfido.check.find(checkId);
             log.debug("Check: {}", check);
+            if(check.getStatus().equals("pending") || check.getStatus().equals("in_progress")) {
+                return "pending";
+            }
 
             return check.getResult();
         } catch (OnfidoException e) {
             log.error("Exception creating the check");
             log.error(e.toString());
+            e.printStackTrace();
 
             throw new NodeProcessException(e);
         } finally {
@@ -104,33 +97,6 @@ public class OnfidoAPICheck {
         throw new NodeProcessException("Onfido API Base URL not configured");
     }
 
-    private List<String> getReportTypes() throws NodeProcessException {
-        if (null == registrationConfig) {
-            throw new NodeProcessException("Registration Configuration not initialized");
-        }
 
-        ArrayList<String> reports = Lists.newArrayList();
-        
-        switch (registrationConfig.biometricCheck()) {
-            case None:
-                reports.add(ReportNames.DOCUMENT.toString());
-                break;
-
-            case Live:
-                reports.add(ReportNames.DOCUMENT.toString());
-                reports.add(ReportNames.FACIAL_SIMILARITY_VIDEO.toString());
-                break;
-
-            case Selfie:
-                reports.add(ReportNames.DOCUMENT.toString());
-                reports.add(ReportNames.FACIAL_SIMILARITY_PHOTO.toString());
-                break;
-
-            default:
-                throw new NodeProcessException("Unknown Report Type selected");
-        }
-
-        return reports;
-    }
 
 }

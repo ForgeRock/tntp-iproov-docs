@@ -69,7 +69,7 @@ public class onfidoCheckNode implements Node {
     private final Config config;
     private final CoreWrapper coreWrapper;
     private final OnfidoAPICheck onfidoApi;
-    private String loggerPrefix = "[Onfido Registration Node][Partner] ";
+    private String loggerPrefix = "[Onfido Registration Node][Marketplace] ";
 
     /**
      * Configuration for the node.
@@ -86,16 +86,6 @@ public class onfidoCheckNode implements Node {
         }
 
         @Attribute(order = 300)
-        default biometricCheck biometricCheck() {
-            return biometricCheck.None;
-        }
-
-        @Attribute(order = 400)
-        default String onfidoApplicantIdAttribute() {
-            return "title";
-        }
-        
-        @Attribute(order = 500)
         default String onfidoCheckIdAttribute() {
             return "description";
         }
@@ -121,25 +111,35 @@ public class onfidoCheckNode implements Node {
 
         log.debug(loggerPrefix+"Calling onfidoCheckNode process method. Context: {}", context);
         try {
+
         	 String username = context.sharedState.get(USERNAME).asString();
              String checkId = "";
-             Set<String> identifiers;
-             log.debug(loggerPrefix + "Grabbing user identifiers for " + config.onfidoCheckIdAttribute());
-             identifiers = coreWrapper.getIdentity(username,coreWrapper.convertRealmPathToRealmDn(context.sharedState.get(REALM).asString())).getAttribute(config.onfidoCheckIdAttribute());
-             if (identifiers != null && !identifiers.isEmpty()) {
-            	 checkId = identifiers.iterator().next();
-                 log.debug(loggerPrefix + "CheckID found: " + checkId);
+             log.error(context.sharedState.get("checkId").asString());
+             if (context.sharedState.get("checkId").asString() != null && !context.sharedState.get("checkId").asString().isEmpty()) {
+                log.error("Shared state");
+                checkId=context.sharedState.get("checkId").asString();
+                log.error(checkId);
+             } else {
+                 log.error(username);
+                 Set<String> identifiers;
+                 log.debug(loggerPrefix + "Grabbing user identifiers for " + config.onfidoCheckIdAttribute());
+                 identifiers = coreWrapper.getIdentity(username,coreWrapper.convertRealmPathToRealmDn(context.sharedState.get(REALM).asString())).getAttribute(config.onfidoCheckIdAttribute());
+                 if (identifiers != null && !identifiers.isEmpty()) {
+                     checkId = identifiers.iterator().next();
+                     log.error(checkId);
+                     log.debug(loggerPrefix + "CheckID found: " + checkId);
+                 }
              }
              
              
         	String status = onfidoApi.checkStatus(checkId);
-        	if (status == "clear") {
+        	if (status.equals("clear")) {
         		return Action.goTo("clear").build();
         	}
-        	if (status == "consider") {
+        	if (status.equals("consider")) {
                 return Action.goTo("consider").build();
             }
-            if (status == "pending") {
+            if (status.equals("pending")) {
                 return Action.goTo("pending").build();
             }
 
@@ -164,7 +164,6 @@ public class onfidoCheckNode implements Node {
             /**
              * Outcomes Ids for this node.
              */
-            static final String SUCCESS_OUTCOME = "true";
             static final String CLEAR_OUTCOME = "clear";
             static final String CONSIDER_OUTCOME = "consider";
             static final String DENY_OUTCOME = "deny";
@@ -176,14 +175,12 @@ public class onfidoCheckNode implements Node {
             @Override
             public List<Outcome> getOutcomes(PreferredLocales locales, JsonValue nodeAttributes) {
 
-                ResourceBundle bundle = locales.getBundleInPreferredLocale(BUNDLE, OutcomeProvider.class.getClassLoader());
 
                 List<Outcome> results = new ArrayList<>(
                         Arrays.asList(
-                                new Outcome(SUCCESS_OUTCOME, "True")
+                                new Outcome(CLEAR_OUTCOME, "Clear")
                         )
                 );
-                results.add(new Outcome(CLEAR_OUTCOME, "Clear"));
                 results.add(new Outcome(CONSIDER_OUTCOME, "Consider"));
                 results.add(new Outcome(DENY_OUTCOME, "Deny"));
                 results.add(new Outcome(PENDING_OUTCOME, "Pending"));
