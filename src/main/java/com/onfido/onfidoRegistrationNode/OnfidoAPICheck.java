@@ -97,33 +97,6 @@ public class OnfidoAPICheck {
         throw new NodeProcessException("Onfido API Base URL not configured");
     }
 
-    private List<String> getReportTypes() throws NodeProcessException {
-        if (null == registrationConfig) {
-            throw new NodeProcessException("Registration Configuration not initialized");
-        }
 
-        ArrayList<String> reports = Lists.newArrayList();
-        
-        switch (registrationConfig.biometricCheck()) {
-            case None:
-                reports.add(ReportNames.DOCUMENT.toString());
-                break;
-
-            case Live:
-                reports.add(ReportNames.DOCUMENT.toString());
-                reports.add(ReportNames.FACIAL_SIMILARITY_VIDEO.toString());
-                break;
-
-            case Selfie:
-                reports.add(ReportNames.DOCUMENT.toString());
-                reports.add(ReportNames.FACIAL_SIMILARITY_PHOTO.toString());
-                break;
-
-            default:
-                throw new NodeProcessException("Unknown Report Type selected");
-        }
-
-        return reports;
-    }
 
 }

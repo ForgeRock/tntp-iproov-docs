@@ -86,11 +86,6 @@ public class onfidoCheckNode implements Node {
         }
 
         @Attribute(order = 300)
-        default biometricCheck biometricCheck() {
-            return biometricCheck.None;
-        }
-        
-        @Attribute(order = 400)
         default String onfidoCheckIdAttribute() {
             return "description";
         }
