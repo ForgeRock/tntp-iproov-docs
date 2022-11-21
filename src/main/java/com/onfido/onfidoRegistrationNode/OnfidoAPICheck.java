@@ -50,32 +50,25 @@ public class OnfidoAPICheck {
                             .build();
     }
 
-    public String checkStatus(String applicantId) throws NodeProcessException {
+    public String checkStatus(String checkId) throws NodeProcessException {
     	
-        log.debug("Creating check for applicant: {}", applicantId);
+        log.debug("Getting check for checkId: {}", checkId);
 
         log.debug("START: {}", new Timestamp(System.currentTimeMillis()));
-        log.error(applicantId);
 
-        // Create check configuration
-        Check.Request checkRequest = Check.request()
-                                          .applicantId(applicantId)
-                                          .reportNames(getReportTypes())
-                                          .asynchronous(true);
-
-        log.debug("Submitting check request: {}", checkRequest);
-       
-
-        // Create check
+        // Get check
         try {
-        	log.error(applicantId);
-            Check check = onfido.check.find(applicantId);
+            Check check = onfido.check.find(checkId);
             log.debug("Check: {}", check);
+            if(check.getStatus().equals("pending") || check.getStatus().equals("in_progress")) {
+                return "pending";
+            }
 
             return check.getResult();
         } catch (OnfidoException e) {
             log.error("Exception creating the check");
             log.error(e.toString());
+            e.printStackTrace();
 
             throw new NodeProcessException(e);
         } finally {

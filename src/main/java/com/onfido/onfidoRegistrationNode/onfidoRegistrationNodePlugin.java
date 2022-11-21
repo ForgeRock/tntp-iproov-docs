@@ -60,7 +60,7 @@ import java.util.Map;
  */
 public class onfidoRegistrationNodePlugin extends AbstractNodeAmPlugin {
 
-    static private String currentVersion = "2.2.1";
+    static private String currentVersion = "2.3.7";
 
     /**
      * Specify the Map of list of node classes that the plugin is providing. These will then be installed and
@@ -71,7 +71,7 @@ public class onfidoRegistrationNodePlugin extends AbstractNodeAmPlugin {
     @Override
     protected Map<String, Iterable<? extends Class<? extends Node>>> getNodesByVersion() {
         return Collections.singletonMap(onfidoRegistrationNodePlugin.currentVersion,
-                                        Arrays.asList(onfidoRegistrationNode.class, onfidoWebhookNode.class, onfidoCheckNode.class));
+                                        Arrays.asList(onfidoRegistrationNode.class, onfidoCheckNode.class));
     }
 
     /**
@@ -110,7 +110,6 @@ public class onfidoRegistrationNodePlugin extends AbstractNodeAmPlugin {
     public void upgrade(String fromVersion) throws PluginException {
         pluginTools.upgradeAuthNode(onfidoRegistrationNode.class);
         pluginTools.upgradeAuthNode(onfidoCheckNode.class);
-        pluginTools.upgradeAuthNode(onfidoWebhookNode.class);
         super.upgrade(fromVersion);
     }
 
