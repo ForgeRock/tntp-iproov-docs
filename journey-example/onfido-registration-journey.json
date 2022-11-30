@@ -1,0 +1,287 @@
+{
+  "meta": {
+    "origin": "",
+    "exportedBy": "tyler.gelinas@forgerock.com",
+    "exportDate": "2022-11-30T20:06:42.625Z",
+    "exportTool": "platform-admin ui tree export",
+    "exportToolVersion": "1.0",
+    "treesSelectedForExport": [
+      "onfido-registration"
+    ],
+    "innerTreesIncluded": []
+  },
+  "trees": {
+    "onfido-registration": {
+      "tree": {
+        "_id": "onfido-registration",
+        "_rev": "-1772628469",
+        "identityResource": "managed/alpha_user",
+        "uiConfig": {
+          "categories": "[]"
+        },
+        "entryNodeId": "2cb7cc0e-0963-4090-97a5-2dd6952bcf4a",
+        "nodes": {
+          "0feafe52-2dec-41e1-ae90-b6e8dd7c7391": {
+            "connections": {
+              "true": "10f8d4b4-da12-4a0a-b451-a4c537af6705"
+            },
+            "displayName": "Onfido Registration",
+            "nodeType": "onfidoRegistrationNode",
+            "x": 332,
+            "y": 329.015625
+          },
+          "10f8d4b4-da12-4a0a-b451-a4c537af6705": {
+            "connections": {
+              "clear": "20987e7f-bd5f-4515-8fb7-ddef85190be3",
+              "deny": "e301438c-0bd0-429c-ab0c-66126501069a",
+              "error": "e301438c-0bd0-429c-ab0c-66126501069a",
+              "pending": "c8e6b995-5d7d-4d80-8dd5-e65efbbcdb9a"
+            },
+            "displayName": "Onfido Check",
+            "nodeType": "onfidoCheckNode",
+            "x": 631,
+            "y": 177.015625
+          },
+          "20987e7f-bd5f-4515-8fb7-ddef85190be3": {
+            "connections": {
+              "outcome": "f01f1ad7-9e18-424f-bbdb-3e2c672ca1f9"
+            },
+            "displayName": "Platform Password",
+            "nodeType": "ValidatedPasswordNode",
+            "x": 836,
+            "y": 134.015625
+          },
+          "2cb7cc0e-0963-4090-97a5-2dd6952bcf4a": {
+            "connections": {
+              "outcome": "6dc89f44-ff9a-432c-a20d-f0cb167951b1"
+            },
+            "displayName": "Platform Username",
+            "nodeType": "ValidatedUsernameNode",
+            "x": 325,
+            "y": 143.015625
+          },
+          "6dc89f44-ff9a-432c-a20d-f0cb167951b1": {
+            "connections": {
+              "outcome": "0feafe52-2dec-41e1-ae90-b6e8dd7c7391"
+            },
+            "displayName": "Attribute Collector",
+            "nodeType": "AttributeCollectorNode",
+            "x": 325,
+            "y": 244.015625
+          },
+          "c8e6b995-5d7d-4d80-8dd5-e65efbbcdb9a": {
+            "connections": {
+              "DONE": "10f8d4b4-da12-4a0a-b451-a4c537af6705"
+            },
+            "displayName": "Polling Wait Node",
+            "nodeType": "PollingWaitNode",
+            "x": 604,
+            "y": 517.015625
+          },
+          "f01f1ad7-9e18-424f-bbdb-3e2c672ca1f9": {
+            "connections": {
+              "CREATED": "70e691a5-1e33-4ac3-a356-e7b6d60d92e0",
+              "FAILURE": "e301438c-0bd0-429c-ab0c-66126501069a"
+            },
+            "displayName": "Create Object",
+            "nodeType": "CreateObjectNode",
+            "x": 987,
+            "y": 189.015625
+          }
+        },
+        "staticNodes": {
+          "70e691a5-1e33-4ac3-a356-e7b6d60d92e0": {
+            "x": 1423,
+            "y": 75
+          },
+          "e301438c-0bd0-429c-ab0c-66126501069a": {
+            "x": 974,
+            "y": 446
+          },
+          "startNode": {
+            "x": 50,
+            "y": 250
+          }
+        },
+        "enabled": true
+      },
+      "nodes": {
+        "0feafe52-2dec-41e1-ae90-b6e8dd7c7391": {
+          "_id": "0feafe52-2dec-41e1-ae90-b6e8dd7c7391",
+          "_rev": "-293313842",
+          "onfidoApplicantIdAttribute": "description",
+          "onfidoHelpMessage": "Thank you for using Onfido for Identity Verification",
+          "JITProvisioning": true,
+          "onfidoCSSUrl": "https://assets.onfido.com/web-sdk-releases/6.7.1/style.css",
+          "onfidoToken": null,
+          "onfidoApiBaseUrl": "https://api.onfido.com/v3/",
+          "onfidoJSURL": "https://assets.onfido.com/web-sdk-releases/6.7.1/onfido.min.js",
+          "onfidoWelcomeMessage": "Identity Verification",
+          "biometricCheck": "None",
+          "attributeMappingConfiguration": {
+            "city": "address_line_3",
+            "postalCode": "address_line_4",
+            "postalAddress": "address_line_1",
+            "stateProvince": "address_line_5"
+          },
+          "onfidoCheckIdAttribute": "description",
+          "onfidoJWTreferrer": "*://*/*",
+          "_type": {
+            "_id": "onfidoRegistrationNode",
+            "name": "Onfido Registration",
+            "collection": true
+          },
+          "_outcomes": [
+            {
+              "id": "true",
+              "displayName": "True"
+            },
+            {
+              "id": "error",
+              "displayName": "Error"
+            }
+          ]
+        },
+        "10f8d4b4-da12-4a0a-b451-a4c537af6705": {
+          "_id": "10f8d4b4-da12-4a0a-b451-a4c537af6705",
+          "_rev": "1839766246",
+          "onfidoToken": null,
+          "onfidoCheckIdAttribute": "description",
+          "onfidoApiBaseUrl": "https://api.onfido.com/v3/",
+          "_type": {
+            "_id": "onfidoCheckNode",
+            "name": "Onfido Check",
+            "collection": true
+          },
+          "_outcomes": [
+            {
+              "id": "clear",
+              "displayName": "Clear"
+            },
+            {
+              "id": "consider",
+              "displayName": "Consider"
+            },
+            {
+              "id": "deny",
+              "displayName": "Deny"
+            },
+            {
+              "id": "pending",
+              "displayName": "Pending"
+            },
+            {
+              "id": "error",
+              "displayName": "Error"
+            }
+          ]
+        },
+        "20987e7f-bd5f-4515-8fb7-ddef85190be3": {
+          "_id": "20987e7f-bd5f-4515-8fb7-ddef85190be3",
+          "_rev": "1025514501",
+          "passwordAttribute": "password",
+          "validateInput": false,
+          "_type": {
+            "_id": "ValidatedPasswordNode",
+            "name": "Platform Password",
+            "collection": true
+          },
+          "_outcomes": [
+            {
+              "id": "outcome",
+              "displayName": "Outcome"
+            }
+          ]
+        },
+        "2cb7cc0e-0963-4090-97a5-2dd6952bcf4a": {
+          "_id": "2cb7cc0e-0963-4090-97a5-2dd6952bcf4a",
+          "_rev": "-1570715664",
+          "usernameAttribute": "userName",
+          "validateInput": false,
+          "_type": {
+            "_id": "ValidatedUsernameNode",
+            "name": "Platform Username",
+            "collection": true
+          },
+          "_outcomes": [
+            {
+              "id": "outcome",
+              "displayName": "Outcome"
+            }
+          ]
+        },
+        "6dc89f44-ff9a-432c-a20d-f0cb167951b1": {
+          "_id": "6dc89f44-ff9a-432c-a20d-f0cb167951b1",
+          "_rev": "597820446",
+          "attributesToCollect": [
+            "givenName",
+            "sn",
+            "mail"
+          ],
+          "identityAttribute": "userName",
+          "validateInputs": false,
+          "required": false,
+          "_type": {
+            "_id": "AttributeCollectorNode",
+            "name": "Attribute Collector",
+            "collection": true
+          },
+          "_outcomes": [
+            {
+              "id": "outcome",
+              "displayName": "Outcome"
+            }
+          ]
+        },
+        "c8e6b995-5d7d-4d80-8dd5-e65efbbcdb9a": {
+          "_id": "c8e6b995-5d7d-4d80-8dd5-e65efbbcdb9a",
+          "_rev": "-718180222",
+          "spamDetectionTolerance": 3,
+          "spamDetectionEnabled": false,
+          "exitMessage": {},
+          "waitingMessage": {},
+          "secondsToWait": 8,
+          "exitable": false,
+          "_type": {
+            "_id": "PollingWaitNode",
+            "name": "Polling Wait Node",
+            "collection": true
+          },
+          "_outcomes": [
+            {
+              "id": "DONE",
+              "displayName": "Done"
+            }
+          ]
+        },
+        "f01f1ad7-9e18-424f-bbdb-3e2c672ca1f9": {
+          "_id": "f01f1ad7-9e18-424f-bbdb-3e2c672ca1f9",
+          "_rev": "1609180025",
+          "identityResource": "managed/alpha_user",
+          "_type": {
+            "_id": "CreateObjectNode",
+            "name": "Create Object",
+            "collection": true
+          },
+          "_outcomes": [
+            {
+              "id": "CREATED",
+              "displayName": "Created"
+            },
+            {
+              "id": "FAILURE",
+              "displayName": "Failed"
+            }
+          ]
+        }
+      },
+      "innerNodes": {},
+      "scripts": {},
+      "emailTemplates": {},
+      "socialIdentityProviders": {},
+      "themes": [],
+      "saml2Entities": {},
+      "circlesOfTrust": {}
+    }
+  }
+}
