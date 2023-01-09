@@ -26,7 +26,7 @@ Onfido is the new identity standard for the internet. Our AI-based technology as
 
 Once built and dropped into ForgeRock, 2 nodes will be available.
 1) Onfido Registration Node
-2) Onfido Webhook node
+2) Onfido Check node
 
 ## **Installation Steps**
 
@@ -54,7 +54,7 @@ Retrieves the Identity Verification Report from Onfido and update the users prof
 
  ## **Use Case: Registration as a Service**
 
-![ScreenShot](./screenshots/flow_idm_registration.png)
+![ScreenShot](./screenshots/onfido-registration.png)
 
 The Tree should be configured as above. The basic flow is as follows.
 
@@ -77,6 +77,8 @@ The Tree should be configured as above.
 This tree/user journey is built for a user who is already logged in and needs to be redirected through the Onfido Identity Verification. This is used when a user already has an identity in the ForgeRock Platform, but a higher level of assurance is needed on the account. For example, a user who has signed up for a digital identity for a bank to review and track offers, but has now decided to sign up for a checking or savings account. In this case, the user is already known, but no assurance can be attached to the account. Pushing the logged in user through the tree above will start the process of attaching a higher level of assurance to the account.
 
 ## **Configuration: Onfido Registration Node** 
+
+Collects and sends the document and, optionally, biometrics to the Onfido Back end. This node also uses Onfido's Autofill endpoint to get the User Attributes off the document for possible provisioning later.
 
 ![ScreenShot](./screenshots/config_registration.png)
 
@@ -118,11 +120,24 @@ The Attribute Mapping Configuration tells the Registration Node how to map infor
 | address_line_4 | Line 4 of Address (Usually Postal Code in U.S. Address) |
 | address_line_5 | Line 5 of Address (Usually State/Province in U.S. Address) |
 
+## **Configuration: Onfido Check Node**
+
+Gets information of an Onfido check to determine if it completed, and the status of that completion.
+
+![ScreenShot](./screenshots/onfido-check.png)
+
+| Configuration Name        | Explanation           |
+|---------------------------|:-------------|
+| Live Token                | The Onfido Registration Node needs a Live Token Provided by Onfido. To get this Token please go to the Onfido Dashboard at https://onfido.com/dashboard/ and navigate to the Token tab. |
+| Onfido API URL            |The Onfido API Url to send API requests to|
+| Onfido Check ID Attribute |The IDM attribute that should be used to store the Onfido Applicant ID for matching up the Identity Verification Report when it comes in.|
+
+
 ## **Onfido Webhook Tree**
 
 ![ScreenShot](./screenshots/flow_webhook.png)
 
-The Onfido Webhook Node/Tree is used to receive the report from Onfido.
+The Onfido Webhook Node/Tree is used to receive the report from Onfido. This is available in the on prem release.
 
 The tree also finds and updates the user inside of ForgeRock that corresponds to the Report. If you are familiar with ForgeRock, normally  Trees are used to log users in and provide SSOTokens. But, when called with specific Query Params, you can send information through a tree without returning an SSO Token. This is very important, and  the configuration steps below must be followed to make sure that an SSO Token is not created for this flow.
 
