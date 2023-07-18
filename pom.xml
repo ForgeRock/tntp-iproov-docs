@@ -28,7 +28,7 @@
     <description>OnFido Auth Tree Node</description>
 
     <properties>
-        <am.version>7.2.0</am.version>
+        <am.version>LATEST</am.version>
         <onfido.version>1.4.0</onfido.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <okhttp-version>4.9.0</okhttp-version>
