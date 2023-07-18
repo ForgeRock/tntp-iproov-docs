@@ -38,6 +38,8 @@ import org.forgerock.openam.core.CoreWrapper;
 import org.forgerock.openam.sm.annotations.adapters.Password;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.forgerock.openam.auth.node.api.OutcomeProvider;
 import javax.inject.Inject;
 import javax.security.auth.callback.Callback;
@@ -64,7 +66,7 @@ import static org.forgerock.openam.auth.node.api.SharedStateConstants.USERNAME;
  * verification (IDV) check using document, face, or video. This check is run by onfido. Information is pulled
  * from the document to initiate the IDV check.
  */
-@Slf4j(topic = "amAuth")
+
 @Node.Metadata(outcomeProvider = onfidoRegistrationNode.OutcomeProvider.class,
         configClass = onfidoRegistrationNode.Config.class, tags = {"marketplace","trustnetwork"})
 public class onfidoRegistrationNode implements Node {
@@ -72,7 +74,8 @@ public class onfidoRegistrationNode implements Node {
     private final Config config;
     private final CoreWrapper coreWrapper;
     private final OnfidoAPI onfidoApi;
-    private String loggerPrefix = "[Onfido Registration Node][Marketplace] ";
+    private String loggerPrefix = "[Onfido Registration Node]" + onfidoRegistrationNodePlugin.logAppender;
+    private final Logger log = LoggerFactory.getLogger(OnfidoAPI.class);
 
     /**
      * Configuration for the node.
