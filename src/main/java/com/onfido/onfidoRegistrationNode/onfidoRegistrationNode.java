@@ -17,6 +17,43 @@
 
 package com.onfido.onfidoRegistrationNode;
 
+import static org.forgerock.json.JsonValue.json;
+import static org.forgerock.json.JsonValue.object;
+import static org.forgerock.openam.auth.node.api.Action.send;
+import static org.forgerock.openam.auth.node.api.SharedStateConstants.REALM;
+import static org.forgerock.openam.auth.node.api.SharedStateConstants.USERNAME;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
+import java.util.Set;
+
+import javax.inject.Inject;
+import javax.security.auth.callback.Callback;
+import javax.security.auth.callback.TextOutputCallback;
+
+import org.forgerock.json.JsonValue;
+import org.forgerock.openam.annotations.sm.Attribute;
+import org.forgerock.openam.auth.node.api.Action;
+import org.forgerock.openam.auth.node.api.Node;
+import org.forgerock.openam.auth.node.api.NodeProcessException;
+import org.forgerock.openam.auth.node.api.NodeState;
+import org.forgerock.openam.auth.node.api.SharedStateConstants;
+import org.forgerock.openam.auth.node.api.TreeContext;
+import org.forgerock.openam.core.CoreWrapper;
+import org.forgerock.openam.sm.annotations.adapters.Password;
+import org.forgerock.util.i18n.PreferredLocales;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.inject.assistedinject.Assisted;
 import com.iplanet.sso.SSOException;
 import com.iplanet.sso.SSOTokenManager;
@@ -25,41 +62,6 @@ import com.onfido.models.Check;
 import com.sun.identity.authentication.callbacks.ScriptTextOutputCallback;
 import com.sun.identity.idm.AMIdentity;
 import com.sun.identity.idm.IdRepoException;
-import lombok.extern.slf4j.Slf4j;
-import org.forgerock.json.JsonValue;
-import org.forgerock.openam.annotations.sm.Attribute;
-import org.forgerock.openam.auth.node.api.Action;
-import org.forgerock.openam.auth.node.api.Node;
-import org.forgerock.openam.auth.node.api.NodeProcessException;
-import org.forgerock.openam.auth.node.api.SharedStateConstants;
-import org.forgerock.openam.auth.node.api.SingleOutcomeNode;
-import org.forgerock.openam.auth.node.api.TreeContext;
-import org.forgerock.openam.core.CoreWrapper;
-import org.forgerock.openam.sm.annotations.adapters.Password;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.forgerock.openam.auth.node.api.OutcomeProvider;
-import javax.inject.Inject;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.TextOutputCallback;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import org.forgerock.util.i18n.PreferredLocales;
-import static org.forgerock.json.JsonValue.json;
-import static org.forgerock.json.JsonValue.object;
-import static org.forgerock.openam.auth.node.api.Action.send;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.ResourceBundle;
-import java.util.Set;
-
-import static org.forgerock.openam.auth.node.api.SharedStateConstants.REALM;
-import static org.forgerock.openam.auth.node.api.SharedStateConstants.USERNAME;
 
 /**
  * The onfidoRegistrationNode is used in an authentication tree to require an end user to go through an identity
@@ -75,7 +77,7 @@ public class onfidoRegistrationNode implements Node {
     private final CoreWrapper coreWrapper;
     private final OnfidoAPI onfidoApi;
     private String loggerPrefix = "[Onfido Registration Node]" + onfidoRegistrationNodePlugin.logAppender;
-    private final Logger log = LoggerFactory.getLogger(OnfidoAPI.class);
+    private static final Logger log = LoggerFactory.getLogger(OnfidoAPI.class);
 
     /**
      * Configuration for the node.
@@ -190,15 +192,18 @@ public class onfidoRegistrationNode implements Node {
                 useSSOToken(context, autofill);
             }
 
-            String applicantId = context.sharedState.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
+        	NodeState ns = context.getStateFor(this);
+
+        	String username = ns.get(USERNAME).asString();
+            String applicantId = ns.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
 
 
-            context.sharedState.remove(onfidoConstants.ONFIDO_APPLICANT_ID);
+            ns.remove(onfidoConstants.ONFIDO_APPLICANT_ID);
 
             Check check = onfidoApi.createCheck(applicantId);
 
             if (!config.JITProvisioning()) {
-                AMIdentity userIdentity = coreWrapper.getIdentity(context.sharedState.get(USERNAME).asString(), context.sharedState.get(REALM).asString());
+                AMIdentity userIdentity = coreWrapper.getIdentityOrElseSearchUsingAuthNUserAlias(username, coreWrapper.convertRealmPathToRealmDn(ns.get(REALM).asString()));
                 Set<String> values = new HashSet<String>();
                 values.add(applicantId);
                 Map<String, Set> map = new HashMap<String, Set>();
@@ -212,15 +217,17 @@ public class onfidoRegistrationNode implements Node {
                 userIdentity.setAttributes(map2);
                 userIdentity.store();
             } else {
-                context.sharedState.put("checkId", check.getId());
+                ns.putShared("checkId", check.getId());
             }
 
             return Action.goTo("true").build();
         } catch(Exception ex) {
-            log.error(loggerPrefix+"Exception occurred");
-            log.error(ex.toString());
-            ex.printStackTrace();
-            context.sharedState.put("Exception", ex.toString());
+        	log.error(loggerPrefix + "Exception occurred: " + ex.getStackTrace());
+			context.getStateFor(this).putShared(loggerPrefix + "Exception", new Date() + ": " + ex.getMessage());
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			ex.printStackTrace(pw);
+			context.getStateFor(this).putShared(loggerPrefix + "StackTrack", new Date() + ": " + sw.toString());
             return Action.goTo("error").build();
         }
     }
@@ -230,7 +237,9 @@ public class onfidoRegistrationNode implements Node {
         Applicant newApplicant = onfidoApi.createApplicant();
         String sdkToken = onfidoApi.requestSdkToken(newApplicant);
 
-        context.sharedState.put(onfidoConstants.ONFIDO_APPLICANT_ID, newApplicant.getId());
+    	NodeState ns = context.getStateFor(this);
+
+        ns.putShared(onfidoConstants.ONFIDO_APPLICANT_ID, newApplicant.getId());
 
         log.debug(loggerPrefix+"SDK Token is {}", sdkToken);
 
@@ -253,18 +262,20 @@ public class onfidoRegistrationNode implements Node {
     private void useSSOToken(TreeContext context, onfidoAutoFill autofill) throws NodeProcessException {
         AMIdentity userIdentity = getAMIdentity(context);
         String username = userIdentity.getName();
+    	NodeState ns = context.getStateFor(this);
 
+        
         if (username.equals("anonymous")) {
             return;
         }
 
         try {
-            String onfidoApplicantId = context.sharedState.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
+            String onfidoApplicantId = ns.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
             UserData idAttributes = UserData.fromAmIdentityWith(userIdentity, config.attributeMappingConfiguration());
 
             setObjectAttributes(context, idAttributes, autofill);
 
-            Map<String, String> attrMap = new HashMap<>() {{ put(config.onfidoApplicantIdAttribute(), onfidoApplicantId); }};
+            Map<String, String> attrMap = new HashMap<String, String>() {{ put(config.onfidoApplicantIdAttribute(), onfidoApplicantId); }};
 
             userIdentity.setAttributes(attrMap);
             userIdentity.store();
@@ -275,7 +286,9 @@ public class onfidoRegistrationNode implements Node {
     }
 
     private void handleJITProvisioning(TreeContext context, onfidoAutoFill autofill) throws NodeProcessException {
-        String onfidoApplicantId = context.sharedState.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
+    	NodeState ns = context.getStateFor(this);
+    	
+        String onfidoApplicantId = ns.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
 
         UserData idAttributes = autofill.getIdAttributes(onfidoApplicantId);
 
@@ -283,11 +296,13 @@ public class onfidoRegistrationNode implements Node {
     }
 
     private void setObjectAttributes(TreeContext context, UserData userData, onfidoAutoFill autofill) throws NodeProcessException {
-        String onfidoApplicantId = context.sharedState.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
-        String username = context.sharedState.get(SharedStateConstants.USERNAME).asString();
+        
+    	NodeState ns = context.getStateFor(this);
+    	String onfidoApplicantId = ns.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
+        String username = ns.get(SharedStateConstants.USERNAME).asString();
 
         JsonValue objectAttributes = json(object());
-        JsonValue oldAttributes = context.sharedState.get("objectAttributes");
+        JsonValue oldAttributes = ns.get("objectAttributes");
 
         // Ensure that we keep any existing attributes
         for (String key : oldAttributes.keys()) {
@@ -295,7 +310,7 @@ public class onfidoRegistrationNode implements Node {
         }
 
         if (userData == null) {
-            context.sharedState.put(onfidoConstants.IDM_ATTRIBUTES_SHARED_STATE_KEY, objectAttributes);
+            ns.putShared(onfidoConstants.IDM_ATTRIBUTES_SHARED_STATE_KEY, objectAttributes);
 
             return;
         }
@@ -313,12 +328,12 @@ public class onfidoRegistrationNode implements Node {
         objectAttributes.put(onfidoConstants.USER_NAME_SHARED_STATE_KEY, username);
         objectAttributes.put(config.onfidoApplicantIdAttribute(), onfidoApplicantId);
 
-        context.sharedState.put(onfidoConstants.IDM_ATTRIBUTES_SHARED_STATE_KEY, objectAttributes);
+        ns.putShared(onfidoConstants.IDM_ATTRIBUTES_SHARED_STATE_KEY, objectAttributes);
     }
 
     private AMIdentity getAMIdentity(TreeContext context) throws NodeProcessException {
         try {
-            return coreWrapper.getIdentity(SSOTokenManager.getInstance().createSSOToken(context.request.ssoTokenId));
+            return new AMIdentity(SSOTokenManager.getInstance().createSSOToken(context.request.ssoTokenId));
         } catch (IdRepoException | SSOException e) {
             log.error(loggerPrefix+"Unable to find user identity for user with SSO token: {}", context.request.ssoTokenId);
 

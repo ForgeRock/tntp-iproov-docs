@@ -18,24 +18,23 @@ import com.onfido.models.Extraction;
 import com.onfido.models.Report;
 import com.onfido.models.SdkToken;
 
-import lombok.extern.slf4j.Slf4j;
+
 
 public class OnfidoAPI {
     private static final String DEFAULT_FIRST_NAME = "anonymous";
     private static final String DEFAULT_LAST_NAME = "anonymous";
 
     private final onfidoRegistrationNode.Config registrationConfig;
-    private final onfidoWebhookNode.Config webhookConfig;
+
     private final Onfido onfido;
     private String loggerPrefix = "[OnfidoAPI]" + onfidoRegistrationNodePlugin.logAppender;
-    private final Logger log = LoggerFactory.getLogger(OnfidoAPI.class);
-    
+    private static final Logger log = LoggerFactory.getLogger(OnfidoAPI.class);    
 
     public OnfidoAPI(onfidoRegistrationNode.Config config) throws NodeProcessException {
         log.debug(loggerPrefix + "initializing OnfidoAPI: {}", config);
 
         this.registrationConfig = config;
-        this.webhookConfig = null;
+
 
         this.onfido = Onfido.builder()
                             .apiToken(getApiToken())
@@ -43,17 +42,7 @@ public class OnfidoAPI {
                             .build();
     }
 
-    public OnfidoAPI(onfidoWebhookNode.Config config) throws NodeProcessException {
-        log.debug(loggerPrefix + "initializing OnfidoAPI: {}", config);
 
-        this.registrationConfig = null;
-        this.webhookConfig = config;
-
-        this.onfido = Onfido.builder()
-                            .apiToken(getApiToken())
-                            .unknownApiUrl(getBaseUrl())
-                            .build();
-    }
 
     public Applicant createApplicant() throws NodeProcessException {
 
@@ -155,9 +144,7 @@ public class OnfidoAPI {
     private String getApiToken() throws NodeProcessException {
         if (registrationConfig != null) {
             return new String(registrationConfig.onfidoToken());
-        } else if (webhookConfig != null){
-            return new String(webhookConfig.onfidoToken());
-        }
+        } 
 
         throw new NodeProcessException("Onfido API Token not configured");
     }
@@ -165,8 +152,6 @@ public class OnfidoAPI {
     private String getBaseUrl() throws NodeProcessException {
         if (registrationConfig != null) {
             return registrationConfig.onfidoApiBaseUrl();
-        } else if (webhookConfig != null) {
-            return webhookConfig.onfidoApiBaseUrl();
         }
 
         throw new NodeProcessException("Onfido API Base URL not configured");

@@ -17,45 +17,36 @@
 
 package com.onfido.onfidoRegistrationNode;
 
-import com.google.inject.assistedinject.Assisted;
-import com.iplanet.sso.SSOException;
-import com.iplanet.sso.SSOTokenManager;
-import com.onfido.models.Applicant;
-import com.sun.identity.authentication.callbacks.ScriptTextOutputCallback;
-import com.sun.identity.idm.AMIdentity;
-import com.sun.identity.idm.IdRepoException;
-import lombok.extern.slf4j.Slf4j;
+import static org.forgerock.openam.auth.node.api.SharedStateConstants.REALM;
+import static org.forgerock.openam.auth.node.api.SharedStateConstants.USERNAME;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Set;
+
+import javax.inject.Inject;
+
 import org.forgerock.json.JsonValue;
 import org.forgerock.openam.annotations.sm.Attribute;
 import org.forgerock.openam.auth.node.api.Action;
 import org.forgerock.openam.auth.node.api.Node;
 import org.forgerock.openam.auth.node.api.NodeProcessException;
-import org.forgerock.openam.auth.node.api.SharedStateConstants;
-import org.forgerock.openam.auth.node.api.SingleOutcomeNode;
+import org.forgerock.openam.auth.node.api.NodeState;
 import org.forgerock.openam.auth.node.api.TreeContext;
 import org.forgerock.openam.core.CoreWrapper;
 import org.forgerock.openam.sm.annotations.adapters.Password;
-import org.json.JSONException;
-import org.json.JSONObject;
-import org.forgerock.openam.auth.node.api.OutcomeProvider;
-import javax.inject.Inject;
-import javax.security.auth.callback.Callback;
-import javax.security.auth.callback.TextOutputCallback;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import org.forgerock.util.i18n.PreferredLocales;
-import static org.forgerock.json.JsonValue.json;
-import static org.forgerock.json.JsonValue.object;
-import static org.forgerock.openam.auth.node.api.Action.send;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.ResourceBundle;
-import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import static org.forgerock.openam.auth.node.api.SharedStateConstants.REALM;
-import static org.forgerock.openam.auth.node.api.SharedStateConstants.USERNAME;
+import com.google.inject.assistedinject.Assisted;
+
+import lombok.extern.slf4j.Slf4j;
 /**
  * The onfidoCheckNode is used in an authentication tree to require an end user to go through an identity
  * verification (IDV) check using document, face, or video. This check is run by onfido. Information is pulled
@@ -69,7 +60,8 @@ public class onfidoCheckNode implements Node {
     private final Config config;
     private final CoreWrapper coreWrapper;
     private final OnfidoAPICheck onfidoApi;
-    private String loggerPrefix = "[Onfido Registration Node][Marketplace] ";
+    private String loggerPrefix = "[Onfido Check Node]" + onfidoRegistrationNodePlugin.logAppender;
+    private static final Logger log = LoggerFactory.getLogger(OnfidoAPI.class);
 
     /**
      * Configuration for the node.
@@ -111,19 +103,25 @@ public class onfidoCheckNode implements Node {
 
         log.debug(loggerPrefix+"Calling onfidoCheckNode process method. Context: {}", context);
         try {
+        	
+        	
+        	NodeState ns = context.getStateFor(this);
 
-        	 String username = context.sharedState.get(USERNAME).asString();
+        	 String username = ns.get(USERNAME).asString();
              String checkId = "";
-             log.error(context.sharedState.get("checkId").asString());
-             if (context.sharedState.get("checkId").asString() != null && !context.sharedState.get("checkId").asString().isEmpty()) {
+             log.error(ns.get("checkId").asString());
+             if (ns.get("checkId").asString() != null && !ns.get("checkId").asString().isEmpty()) {
                 log.error("Shared state");
-                checkId=context.sharedState.get("checkId").asString();
+                checkId=ns.get("checkId").asString();
                 log.error(checkId);
              } else {
                  log.error(username);
                  Set<String> identifiers;
                  log.debug(loggerPrefix + "Grabbing user identifiers for " + config.onfidoCheckIdAttribute());
-                 identifiers = coreWrapper.getIdentity(username,coreWrapper.convertRealmPathToRealmDn(context.sharedState.get(REALM).asString())).getAttribute(config.onfidoCheckIdAttribute());
+
+                 identifiers = coreWrapper.getIdentityOrElseSearchUsingAuthNUserAlias(username, coreWrapper.convertRealmPathToRealmDn(ns.get(REALM).asString())).getAttribute(config.onfidoCheckIdAttribute());
+                 
+                 
                  if (identifiers != null && !identifiers.isEmpty()) {
                      checkId = identifiers.iterator().next();
                      log.error(checkId);
@@ -145,9 +143,12 @@ public class onfidoCheckNode implements Node {
 
             return Action.goTo("deny").build();
         } catch(Exception ex) {
-            log.error(loggerPrefix+"Exception occurred");
-            ex.printStackTrace();
-            context.sharedState.put("Exception", ex.toString());
+        	log.error(loggerPrefix + "Exception occurred: " + ex.getStackTrace());
+			context.getStateFor(this).putShared(loggerPrefix + "Exception", new Date() + ": " + ex.getMessage());
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			ex.printStackTrace(pw);
+			context.getStateFor(this).putShared(loggerPrefix + "StackTrack", new Date() + ": " + sw.toString());
             return Action.goTo("error").build();
         }
     }

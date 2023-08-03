@@ -1,19 +1,18 @@
 package com.onfido.onfidoRegistrationNode.mocks;
 
+import static org.powermock.api.mockito.PowerMockito.mock;
+import static org.powermock.api.mockito.PowerMockito.when;
+
+import java.io.IOException;
+
+import org.powermock.reflect.Whitebox;
+
 import com.onfido.Onfido;
 import com.onfido.onfidoRegistrationNode.ApiIntegrationTest;
 import com.onfido.onfidoRegistrationNode.OnfidoAPI;
 import com.onfido.onfidoRegistrationNode.onfidoRegistrationNode;
-import com.onfido.onfidoRegistrationNode.onfidoWebhookNode;
+
 import okhttp3.mockwebserver.MockWebServer;
-import org.powermock.reflect.Whitebox;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.IOException;
-
-import static org.powermock.api.mockito.PowerMockito.mock;
-import static org.powermock.api.mockito.PowerMockito.when;
 
 public class MockOnfidoApiFactory extends ApiIntegrationTest {
 

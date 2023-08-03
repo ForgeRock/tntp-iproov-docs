@@ -94,6 +94,18 @@
             <artifactId>kotlin-stdlib</artifactId>
             <version>1.3.41</version>
         </dependency>
+        
+        <dependency>
+            <groupId>org.forgerock.am</groupId>
+            <artifactId>identity-api</artifactId>
+        </dependency>
+        <dependency>
+           <groupId>org.forgerock.am</groupId>
+           <artifactId>openam-idm-integration-service</artifactId>
+        </dependency>
+        
+        
+        
         <!-- https://mvnrepository.com/artifact/com.onfido/onfido-api-java -->
         <dependency>
             <groupId>com.onfido</groupId>
