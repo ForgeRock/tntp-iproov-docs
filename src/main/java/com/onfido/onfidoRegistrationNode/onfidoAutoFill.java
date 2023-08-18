@@ -69,12 +69,12 @@ class onfidoAutoFill {
         setApplicantAddress(applicantRequest, documentAttributes);
         setApplicantDob(applicantRequest, documentAttributes);
 
-        try {
-            Applicant result = onfidoApi.updateApplicant(applicantId, applicantRequest);
-            log.debug(loggerPrefix + "Updating applicant result is: {}", result);
-        } catch (OnfidoException e) {
-            log.error(loggerPrefix + "ERROR: Could not update applicant: {}", e.getMessage());
-        }
+//        try {
+//            //Applicant result = onfidoApi.updateApplicant(applicantId, applicantRequest);
+//            //log.debug(loggerPrefix + "Updating applicant result is: {}", result);
+//        } catch (OnfidoException e) {
+//            log.error(loggerPrefix + "ERROR: Could not update applicant: {}", e.getMessage());
+//        }
     }
 
     // Helpers to populate an Applicant object from document information

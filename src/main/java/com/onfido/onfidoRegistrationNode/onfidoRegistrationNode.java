@@ -194,7 +194,6 @@ public class onfidoRegistrationNode implements Node {
 
         	NodeState ns = context.getStateFor(this);
 
-        	String username = ns.get(USERNAME).asString();
             String applicantId = ns.get(onfidoConstants.ONFIDO_APPLICANT_ID).asString();
 
 
@@ -203,19 +202,10 @@ public class onfidoRegistrationNode implements Node {
             Check check = onfidoApi.createCheck(applicantId);
 
             if (!config.JITProvisioning()) {
-                AMIdentity userIdentity = coreWrapper.getIdentityOrElseSearchUsingAuthNUserAlias(username, coreWrapper.convertRealmPathToRealmDn(ns.get(REALM).asString()));
-                Set<String> values = new HashSet<String>();
-                values.add(applicantId);
-                Map<String, Set> map = new HashMap<String, Set>();
-                map.put(config.onfidoApplicantIdAttribute(), values);
-                userIdentity.setAttributes(map);
-                userIdentity.store();
-                Map<String, Set> map2 = new HashMap<String, Set>();
-                Set<String> values2 = new HashSet<String>();
-                values2.add(check.getId());
-                map2.put(config.onfidoCheckIdAttribute(), values2);
-                userIdentity.setAttributes(map2);
-                userIdentity.store();
+                ns.putShared(config.onfidoCheckIdAttribute(), applicantId);
+                ns.putShared(config.onfidoApplicantIdAttribute(), check.getId());
+                ns.putShared("checkId", check.getId());
+                ns.putShared("applicantId", applicantId);
             } else {
                 ns.putShared("checkId", check.getId());
             }
@@ -232,12 +222,15 @@ public class onfidoRegistrationNode implements Node {
         }
     }
 
-    private Action buildCallbacks(TreeContext context) throws NodeProcessException {
+    private Action buildCallbacks(TreeContext context) throws NodeProcessException, IdRepoException, SSOException {
         // Limit the at-rest region, if needed (optional, see https://documentation.onfido.com/#regions)
-        Applicant newApplicant = onfidoApi.createApplicant();
-        String sdkToken = onfidoApi.requestSdkToken(newApplicant);
+        NodeState ns = context.getStateFor(this);
 
-    	NodeState ns = context.getStateFor(this);
+        String username = ns.get(USERNAME).asString();
+        AMIdentity userIdentity = coreWrapper.getIdentityOrElseSearchUsingAuthNUserAlias(username, coreWrapper.convertRealmPathToRealmDn(ns.get(REALM).asString()));
+
+        Applicant newApplicant = onfidoApi.createApplicant(userIdentity.getAttribute("givenName").toString(), userIdentity.getAttribute("sn").toString());
+        String sdkToken = onfidoApi.requestSdkToken(newApplicant);
 
         ns.putShared(onfidoConstants.ONFIDO_APPLICANT_ID, newApplicant.getId());
 

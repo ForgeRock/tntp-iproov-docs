@@ -44,11 +44,11 @@ public class OnfidoAPI {
 
 
 
-    public Applicant createApplicant() throws NodeProcessException {
+    public Applicant createApplicant(String first_name, String last_name) throws NodeProcessException {
 
         Applicant.Request applicantRequest = null;
         try {
-            applicantRequest = Applicant.request().firstName(DEFAULT_FIRST_NAME).lastName(DEFAULT_LAST_NAME);
+            applicantRequest = Applicant.request().firstName(first_name).lastName(last_name);
 
             return onfido.applicant.create(applicantRequest);
         } catch (OnfidoException e) {
