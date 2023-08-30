@@ -109,13 +109,13 @@ public class onfidoCheckNode implements Node {
 
         	 String username = ns.get(USERNAME).asString();
              String checkId = "";
-             log.error(ns.get("checkId").asString());
+             log.error(loggerPrefix + ns.get("checkId").asString());
              if (ns.get("checkId").asString() != null && !ns.get("checkId").asString().isEmpty()) {
-                log.error("Shared state");
+                log.error("loggerPrefix + Shared state");
                 checkId=ns.get("checkId").asString();
-                log.error(checkId);
+                log.error(loggerPrefix + checkId);
              } else {
-                 log.error(username);
+                 log.error(loggerPrefix + username);
                  Set<String> identifiers;
                  log.debug(loggerPrefix + "Grabbing user identifiers for " + config.onfidoCheckIdAttribute());
 
