@@ -17,6 +17,8 @@
 
 package com.onfido.onfidoRegistrationNode;
 
+import static com.onfido.onfidoRegistrationNode.OnfidoAPI.DEFAULT_FIRST_NAME;
+import static com.onfido.onfidoRegistrationNode.OnfidoAPI.DEFAULT_LAST_NAME;
 import static org.forgerock.json.JsonValue.json;
 import static org.forgerock.json.JsonValue.object;
 import static org.forgerock.openam.auth.node.api.Action.send;
@@ -222,14 +224,24 @@ public class onfidoRegistrationNode implements Node {
         }
     }
 
-    private Action buildCallbacks(TreeContext context) throws NodeProcessException, IdRepoException, SSOException {
+    private Action buildCallbacks(TreeContext context) throws Exception {
         // Limit the at-rest region, if needed (optional, see https://documentation.onfido.com/#regions)
         NodeState ns = context.getStateFor(this);
 
         String username = ns.get(USERNAME).asString();
         AMIdentity userIdentity = coreWrapper.getIdentityOrElseSearchUsingAuthNUserAlias(username, coreWrapper.convertRealmPathToRealmDn(ns.get(REALM).asString()));
+        Applicant newApplicant = null;
+        if (userIdentity != null && userIdentity.isExists() && userIdentity.getAttribute("givenName") != null && userIdentity.getAttribute("sn") != null) {
+            newApplicant = onfidoApi.createApplicant(userIdentity.getAttribute("givenName").toString(), userIdentity.getAttribute("sn").toString());
+        } else if(ns.get("givenName") != null && ns.get("sn") != null) {
+            newApplicant = onfidoApi.createApplicant(ns.get("givenName").toString(), ns.get("sn").toString());
+        } else {
+            newApplicant = onfidoApi.createApplicant(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
+        }
 
-        Applicant newApplicant = onfidoApi.createApplicant(userIdentity.getAttribute("givenName").toString(), userIdentity.getAttribute("sn").toString());
+        if (newApplicant == null) {
+            throw new Exception("No applicant can be created");
+        }
         String sdkToken = onfidoApi.requestSdkToken(newApplicant);
 
         ns.putShared(onfidoConstants.ONFIDO_APPLICANT_ID, newApplicant.getId());

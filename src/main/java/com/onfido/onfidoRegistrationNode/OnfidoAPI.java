@@ -21,8 +21,8 @@ import com.onfido.models.SdkToken;
 
 
 public class OnfidoAPI {
-    private static final String DEFAULT_FIRST_NAME = "anonymous";
-    private static final String DEFAULT_LAST_NAME = "anonymous";
+    protected static final String DEFAULT_FIRST_NAME = "anonymous";
+    protected static final String DEFAULT_LAST_NAME = "anonymous";
 
     private final onfidoRegistrationNode.Config registrationConfig;
 
@@ -193,4 +193,5 @@ public class OnfidoAPI {
 
         return registrationConfig.onfidoJWTreferrer();
     }
+
 }
