@@ -233,8 +233,8 @@ public class onfidoRegistrationNode implements Node {
         Applicant newApplicant = null;
         if (userIdentity != null && userIdentity.isExists() && userIdentity.getAttribute("givenName") != null && userIdentity.getAttribute("sn") != null) {
             newApplicant = onfidoApi.createApplicant(userIdentity.getAttribute("givenName").toString(), userIdentity.getAttribute("sn").toString());
-        } else if(ns.get("givenName") != null && ns.get("sn") != null) {
-            newApplicant = onfidoApi.createApplicant(ns.get("givenName").toString(), ns.get("sn").toString());
+        } else if(ns.get("objectAttributes").get("givenName") != null && ns.get("objectAttributes").get("sn") != null) {
+            newApplicant = onfidoApi.createApplicant(ns.get("objectAttributes").get("givenName").toString(), ns.get("objectAttributes").get("sn").toString());
         } else {
             newApplicant = onfidoApi.createApplicant(DEFAULT_FIRST_NAME, DEFAULT_LAST_NAME);
         }
