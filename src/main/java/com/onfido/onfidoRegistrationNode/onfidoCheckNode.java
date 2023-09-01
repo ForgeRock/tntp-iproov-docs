@@ -129,8 +129,9 @@ public class onfidoCheckNode implements Node {
                  }
              }
              
-             
+
         	String status = onfidoApi.checkStatus(checkId);
+             ns.putShared("Onfido_Result", status);
         	if (status.equals("clear")) {
         		return Action.goTo("clear").build();
         	}
