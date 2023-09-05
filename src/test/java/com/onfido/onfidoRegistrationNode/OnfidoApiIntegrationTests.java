@@ -147,8 +147,8 @@ class OnfidoApiIntegrationTests extends ApiIntegrationTest {
                 MockOnfidoApiConfiguration.builder().build();
         OnfidoAPI mockOnfidoAPI = MockOnfidoApiFactory.fakeOnfidoApi(mockOnfidoApiConfiguration, mockWebServer);
 
-        when(mockOnfidoAPI.createApplicant()).thenCallRealMethod();
-        mockOnfidoAPI.createApplicant();
+        when(mockOnfidoAPI.createApplicant("anonymous", "anonymous")).thenCallRealMethod();
+        mockOnfidoAPI.createApplicant("anonymous", "anonymous");
 
         RecordedRequest recordedRequest = mockWebServer.takeRequest(10, TimeUnit.SECONDS);
 
@@ -156,7 +156,7 @@ class OnfidoApiIntegrationTests extends ApiIntegrationTest {
         JsonAdapter<OnfidoApplicantRequest> jsonAdapter = moshi.adapter(OnfidoApplicantRequest.class);
         OnfidoApplicantRequest onfidoApplicantRequest = jsonAdapter.fromJson(recordedRequest.getBody().readUtf8());
 
-        verify(mockOnfidoAPI, times(1)).createApplicant();
+        verify(mockOnfidoAPI, times(1)).createApplicant("anonymous", "anonymous");
         verifyNoMoreInteractions(mockOnfidoAPI);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(onfidoApplicantRequest.getFirst_name()).isEqualTo("anonymous");
@@ -172,14 +172,14 @@ class OnfidoApiIntegrationTests extends ApiIntegrationTest {
                 MockOnfidoApiConfiguration.builder().build();
         OnfidoAPI mockOnfidoAPI = MockOnfidoApiFactory.fakeOnfidoApi(mockOnfidoApiConfiguration, mockWebServer);
 
-        when(mockOnfidoAPI.createApplicant()).thenCallRealMethod();
+        when(mockOnfidoAPI.createApplicant("anonymous", "anonymous")).thenCallRealMethod();
 
         Throwable thrown = catchThrowable(() -> {
-            mockOnfidoAPI.createApplicant();
+            mockOnfidoAPI.createApplicant("anonymous", "anonymous");
         });
         mockWebServer.takeRequest(10, TimeUnit.SECONDS);
 
-        verify(mockOnfidoAPI, times(1)).createApplicant();
+        verify(mockOnfidoAPI, times(1)).createApplicant("anonymous", "anonymous");
         verifyNoMoreInteractions(mockOnfidoAPI);
         SoftAssertions.assertSoftly(softly -> {
             softly.assertThat(thrown).isInstanceOf(NodeProcessException.class).hasMessageContaining("ApiException");

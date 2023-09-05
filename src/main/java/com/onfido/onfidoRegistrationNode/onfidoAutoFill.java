@@ -4,18 +4,25 @@ import com.onfido.exceptions.OnfidoException;
 import com.onfido.models.Address;
 import com.onfido.models.Applicant;
 import com.onfido.models.Document;
-import lombok.extern.slf4j.Slf4j;
+
 import org.apache.commons.lang.StringUtils;
 import org.forgerock.openam.auth.node.api.NodeProcessException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
 
-@Slf4j(topic="amAuth")
+
 class onfidoAutoFill {
     private String backId = null;
     private String frontId = null;
     private final OnfidoAPI onfidoApi;
+    
+    private String loggerPrefix = "[onfidoAutoFill]" + onfidoRegistrationNodePlugin.logAppender;
+    private static final Logger log = LoggerFactory.getLogger(onfidoAutoFill.class);
+    
+    
 
     public onfidoAutoFill(OnfidoAPI onfidoApi) {
         this.onfidoApi = onfidoApi;
@@ -49,7 +56,7 @@ class onfidoAutoFill {
             }
         }
 
-        log.error("Unable to get json attributes from Onfido Service");
+        log.error(loggerPrefix + "Unable to get json attributes from Onfido Service");
 
         return null;
     }
@@ -62,12 +69,12 @@ class onfidoAutoFill {
         setApplicantAddress(applicantRequest, documentAttributes);
         setApplicantDob(applicantRequest, documentAttributes);
 
-        try {
-            Applicant result = onfidoApi.updateApplicant(applicantId, applicantRequest);
-            log.debug("Updating applicant result is: {}", result);
-        } catch (OnfidoException e) {
-            log.error("ERROR: Could not update applicant: {}", e.getMessage());
-        }
+//        try {
+//            //Applicant result = onfidoApi.updateApplicant(applicantId, applicantRequest);
+//            //log.debug(loggerPrefix + "Updating applicant result is: {}", result);
+//        } catch (OnfidoException e) {
+//            log.error(loggerPrefix + "ERROR: Could not update applicant: {}", e.getMessage());
+//        }
     }
 
     // Helpers to populate an Applicant object from document information
