@@ -1,0 +1,183 @@
+{
+  "meta": {
+    "origin": "https://forgeops.wolfe-industries.com/am",
+    "originAmVersion": "7.3.0",
+    "exportedBy": "amadmin",
+    "exportDate": "2023-11-20T21:00:33.580Z",
+    "exportTool": "frodo",
+    "exportToolVersion": "v1.1.0 [v18.18.2]"
+  },
+  "innerNodes": {
+    "285771f4-5251-48da-a536-ea07177f97ee": {
+      "_id": "285771f4-5251-48da-a536-ea07177f97ee",
+      "_rev": "2106784202",
+      "_type": {
+        "_id": "UsernameCollectorNode",
+        "name": "Username Collector",
+        "collection": true
+      },
+      "_outcomes": [
+        {
+          "id": "outcome",
+          "displayName": "Outcome"
+        }
+      ]
+    },
+    "1af0522c-7791-45bb-87b9-4899b8929ef0": {
+      "_id": "1af0522c-7791-45bb-87b9-4899b8929ef0",
+      "_rev": "-1182446871",
+      "_type": {
+        "_id": "PasswordCollectorNode",
+        "name": "Password Collector",
+        "collection": true
+      },
+      "_outcomes": [
+        {
+          "id": "outcome",
+          "displayName": "Outcome"
+        }
+      ]
+    }
+  },
+  "nodes": {
+    "5194073e-a5ac-4645-8bb3-5e58c7fc9610": {
+      "_id": "5194073e-a5ac-4645-8bb3-5e58c7fc9610",
+      "_rev": "550726273",
+      "nodes": [
+        {
+          "_id": "285771f4-5251-48da-a536-ea07177f97ee",
+          "nodeType": "UsernameCollectorNode",
+          "displayName": "Username Collector"
+        },
+        {
+          "_id": "1af0522c-7791-45bb-87b9-4899b8929ef0",
+          "nodeType": "PasswordCollectorNode",
+          "displayName": "Password Collector"
+        }
+      ],
+      "pageDescription": {},
+      "pageHeader": {},
+      "_type": {
+        "_id": "PageNode",
+        "name": "Page Node",
+        "collection": true
+      },
+      "_outcomes": [
+        {
+          "id": "outcome",
+          "displayName": "Outcome"
+        }
+      ]
+    },
+    "8f4829da-fc09-4d75-aba0-44a9eedd2630": {
+      "_id": "8f4829da-fc09-4d75-aba0-44a9eedd2630",
+      "_rev": "-1790563032",
+      "iproov_oauth_password": "*******************",
+      "Prompt_Background_Color": "#ffffff",
+      "Title_Text_Color": "#fff",
+      "NPMJS_iProov_Package": "iproov/web-sdk",
+      "NPMJS_Repo_URL": "https://registry.npmjs.org",
+      "NPMJS_Username": "bwolfe_hubcitymedia",
+      "Assets_URL": "https://cdn.iproov.app",
+      "iProov_API_Key": "*******************",
+      "iProov_Base_URL": "/api/v2",
+      "Custom_Title": "iProov Ltd",
+      "Filter": "vibrant",
+      "iProov_Assurance_Type": "LA",
+      "Logo": "https://avatars.githubusercontent.com/u/4119093?s=200&v=4",
+      "Prompt_Text_Color": "#ffffff",
+      "iProov_Tenant": "us.rp.secure.iproov.me",
+      "iProov_Node_Type": "enrol",
+      "User_UniqueID": "fr-idm-uuid",
+      "iproov_oauth_username": "admin",
+      "NPMJS_Access_Token": "npm_*******************",
+      "Network_Timeout": "25",
+      "iProov_API_Secret": "*******************",
+      "Aria_Live": "assertive",
+      "Prompt_Rounded_Corners": false,
+      "User_Search_Attributes": [
+        "uid"
+      ],
+      "Header_Background_Color": "rgba(255, 0, 0, 0.8)",
+      "Surround_Color": "rgba(0, 0, 0, 0.4)",
+      "Debug": false,
+      "NPMJS_iProov_Package_Version": "5.0.0",
+      "_type": {
+        "_id": "iProovNode",
+        "name": "iProov Auth Node",
+        "collection": true
+      },
+      "_outcomes": [
+        {
+          "id": "TRUE",
+          "displayName": "True"
+        },
+        {
+          "id": "FALSE",
+          "displayName": "False"
+        },
+        {
+          "id": "RETRY",
+          "displayName": "Retry"
+        },
+        {
+          "id": "ERROR",
+          "displayName": "Error"
+        }
+      ]
+    }
+  },
+  "scripts": {},
+  "emailTemplates": {},
+  "socialIdentityProviders": {},
+  "themes": [],
+  "saml2Entities": {},
+  "circlesOfTrust": {},
+  "tree": {
+    "_id": "testiproovnodeenrolla",
+    "_rev": "-1039759960",
+    "identityResource": "managed/user",
+    "uiConfig": {
+      "categories": "[]"
+    },
+    "entryNodeId": "5194073e-a5ac-4645-8bb3-5e58c7fc9610",
+    "nodes": {
+      "5194073e-a5ac-4645-8bb3-5e58c7fc9610": {
+        "connections": {
+          "outcome": "8f4829da-fc09-4d75-aba0-44a9eedd2630"
+        },
+        "displayName": "Page Node",
+        "nodeType": "PageNode",
+        "x": 477,
+        "y": 28.015625
+      },
+      "8f4829da-fc09-4d75-aba0-44a9eedd2630": {
+        "connections": {
+          "ERROR": "e301438c-0bd0-429c-ab0c-66126501069a",
+          "FALSE": "e301438c-0bd0-429c-ab0c-66126501069a",
+          "RETRY": "5194073e-a5ac-4645-8bb3-5e58c7fc9610",
+          "TRUE": "70e691a5-1e33-4ac3-a356-e7b6d60d92e0"
+        },
+        "displayName": "iProov Auth Node",
+        "nodeType": "iProovNode",
+        "x": 768,
+        "y": 47.015625
+      }
+    },
+    "staticNodes": {
+      "70e691a5-1e33-4ac3-a356-e7b6d60d92e0": {
+        "x": 1068,
+        "y": 59
+      },
+      "e301438c-0bd0-429c-ab0c-66126501069a": {
+        "x": 1066,
+        "y": 114
+      },
+      "startNode": {
+        "x": 324,
+        "y": 68
+      }
+    },
+    "enabled": true
+  }
+}

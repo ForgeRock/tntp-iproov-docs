@@ -1,0 +1,163 @@
+{
+  "meta": {
+    "origin": "https://forgeops.wolfe-industries.com/am",
+    "originAmVersion": "7.3.0",
+    "exportedBy": "amadmin",
+    "exportDate": "2023-11-20T21:00:14.591Z",
+    "exportTool": "frodo",
+    "exportToolVersion": "v1.1.0 [v18.18.2]"
+  },
+  "innerNodes": {
+    "02cec752-eac8-4ffa-97e6-4ca1596d1a05": {
+      "_id": "02cec752-eac8-4ffa-97e6-4ca1596d1a05",
+      "_rev": "-1169476401",
+      "_type": {
+        "_id": "UsernameCollectorNode",
+        "name": "Username Collector",
+        "collection": true
+      },
+      "_outcomes": [
+        {
+          "id": "outcome",
+          "displayName": "Outcome"
+        }
+      ]
+    }
+  },
+  "nodes": {
+    "214e9fe6-1418-4ab3-84a9-675dfd738729": {
+      "_id": "214e9fe6-1418-4ab3-84a9-675dfd738729",
+      "_rev": "683270405",
+      "nodes": [
+        {
+          "_id": "02cec752-eac8-4ffa-97e6-4ca1596d1a05",
+          "nodeType": "UsernameCollectorNode",
+          "displayName": "Username Collector"
+        }
+      ],
+      "pageDescription": {},
+      "pageHeader": {},
+      "_type": {
+        "_id": "PageNode",
+        "name": "Page Node",
+        "collection": true
+      },
+      "_outcomes": [
+        {
+          "id": "outcome",
+          "displayName": "Outcome"
+        }
+      ]
+    },
+    "9bc6161c-4bb0-4e55-8600-1876cda4cf02": {
+      "_id": "9bc6161c-4bb0-4e55-8600-1876cda4cf02",
+      "_rev": "-964043466",
+      "iproov_oauth_password": "*******************",
+      "Prompt_Background_Color": "#ffffff",
+      "Title_Text_Color": "#fff",
+      "NPMJS_iProov_Package": "iproov/web-sdk",
+      "NPMJS_Repo_URL": "https://registry.npmjs.org",
+      "NPMJS_Username": "bwolfe_hubcitymedia",
+      "Assets_URL": "https://cdn.iproov.app",
+      "iProov_API_Key": "*******************",
+      "iProov_Base_URL": "/api/v2",
+      "Custom_Title": "iProov Ltd",
+      "Filter": "vibrant",
+      "iProov_Assurance_Type": "GPA",
+      "Logo": "https://avatars.githubusercontent.com/u/4119093?s=200&v=4",
+      "Prompt_Text_Color": "#ffffff",
+      "iProov_Tenant": "us.rp.secure.iproov.me",
+      "iProov_Node_Type": "verify",
+      "User_UniqueID": "fr-idm-uuid",
+      "iproov_oauth_username": "admin",
+      "NPMJS_Access_Token": "npm_*******************",
+      "Network_Timeout": "25",
+      "iProov_API_Secret": "*******************",
+      "Aria_Live": "assertive",
+      "Prompt_Rounded_Corners": false,
+      "User_Search_Attributes": [
+        "uid"
+      ],
+      "Header_Background_Color": "rgba(255, 0, 0, 0.8)",
+      "Surround_Color": "rgba(0, 0, 0, 0.4)",
+      "Debug": false,
+      "NPMJS_iProov_Package_Version": "5.0.0",
+      "_type": {
+        "_id": "iProovNode",
+        "name": "iProov Auth Node",
+        "collection": true
+      },
+      "_outcomes": [
+        {
+          "id": "TRUE",
+          "displayName": "True"
+        },
+        {
+          "id": "FALSE",
+          "displayName": "False"
+        },
+        {
+          "id": "RETRY",
+          "displayName": "Retry"
+        },
+        {
+          "id": "ERROR",
+          "displayName": "Error"
+        }
+      ]
+    }
+  },
+  "scripts": {},
+  "emailTemplates": {},
+  "socialIdentityProviders": {},
+  "themes": [],
+  "saml2Entities": {},
+  "circlesOfTrust": {},
+  "tree": {
+    "_id": "testiproovnodeverifygpa",
+    "_rev": "-703363580",
+    "identityResource": "managed/user",
+    "uiConfig": {
+      "categories": "[]"
+    },
+    "entryNodeId": "214e9fe6-1418-4ab3-84a9-675dfd738729",
+    "nodes": {
+      "214e9fe6-1418-4ab3-84a9-675dfd738729": {
+        "connections": {
+          "outcome": "9bc6161c-4bb0-4e55-8600-1876cda4cf02"
+        },
+        "displayName": "Page Node",
+        "nodeType": "PageNode",
+        "x": 229,
+        "y": 176.015625
+      },
+      "9bc6161c-4bb0-4e55-8600-1876cda4cf02": {
+        "connections": {
+          "ERROR": "e301438c-0bd0-429c-ab0c-66126501069a",
+          "FALSE": "e301438c-0bd0-429c-ab0c-66126501069a",
+          "RETRY": "214e9fe6-1418-4ab3-84a9-675dfd738729",
+          "TRUE": "70e691a5-1e33-4ac3-a356-e7b6d60d92e0"
+        },
+        "displayName": "iProov Auth Node",
+        "nodeType": "iProovNode",
+        "x": 535,
+        "y": 172.015625
+      }
+    },
+    "staticNodes": {
+      "70e691a5-1e33-4ac3-a356-e7b6d60d92e0": {
+        "x": 902,
+        "y": 190
+      },
+      "e301438c-0bd0-429c-ab0c-66126501069a": {
+        "x": 851,
+        "y": 282
+      },
+      "startNode": {
+        "x": 74,
+        "y": 191
+      }
+    },
+    "enabled": true
+  }
+}
